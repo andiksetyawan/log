@@ -11,8 +11,8 @@ import (
 )
 
 type Log struct {
-	Logger *slog.Logger
-	Level  Level
+	logger *slog.Logger
+	level  Level
 }
 
 type OptFunc func(*Log) error
@@ -26,6 +26,13 @@ const (
 	LevelError
 	LevelFatal
 )
+
+func WithLogger(logger *slog.Logger) OptFunc {
+	return func(sl *Log) (err error) {
+		sl.logger = logger
+		return
+	}
+}
 
 func WithLevelString(s string) OptFunc {
 	var l Level = -1
@@ -50,14 +57,14 @@ func WithLevel(l Level) OptFunc {
 			return fmt.Errorf("invalid level: %d", l)
 		}
 
-		sl.Level = l
+		sl.level = l
 		return
 	}
 }
 
 func New(opts ...OptFunc) (l log.Logger, err error) {
 	s := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	sl := &Log{Logger: s, Level: LevelInfo}
+	sl := &Log{logger: s, level: LevelInfo}
 	for _, opt := range opts {
 		err = opt(sl)
 		if err != nil {
@@ -68,33 +75,33 @@ func New(opts ...OptFunc) (l log.Logger, err error) {
 }
 
 func (l Log) Debug(ctx context.Context, message string, args ...any) {
-	if l.Level > LevelDebug {
+	if l.level > LevelDebug {
 		return
 	}
 
-	l.Logger.DebugContext(ctx, message, args...)
+	l.logger.DebugContext(ctx, message, args...)
 }
 
 func (l Log) Info(ctx context.Context, message string, args ...any) {
-	if l.Level > LevelInfo {
+	if l.level > LevelInfo {
 		return
 	}
 
-	l.Logger.InfoContext(ctx, message, args...)
+	l.logger.InfoContext(ctx, message, args...)
 }
 
 func (l Log) Warn(ctx context.Context, message string, args ...any) {
-	if l.Level > LevelWarn {
+	if l.level > LevelWarn {
 		return
 	}
 
-	l.Logger.WarnContext(ctx, message, args...)
+	l.logger.WarnContext(ctx, message, args...)
 }
 
 func (l Log) Error(ctx context.Context, message string, args ...any) {
-	if l.Level > LevelError {
+	if l.level > LevelError {
 		return
 	}
 
-	l.Logger.ErrorContext(ctx, message, args...)
+	l.logger.ErrorContext(ctx, message, args...)
 }
