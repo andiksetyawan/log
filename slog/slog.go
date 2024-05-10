@@ -24,7 +24,6 @@ const (
 	LevelInfo
 	LevelWarn
 	LevelError
-	LevelFatal
 )
 
 func WithLogger(logger *slog.Logger) OptFunc {
@@ -45,15 +44,13 @@ func WithLevelString(s string) OptFunc {
 		l = 2
 	case "error":
 		l = 3
-	case "fatal":
-		l = 4
 	}
 	return WithLevel(l)
 }
 
 func WithLevel(l Level) OptFunc {
 	return func(sl *Log) (err error) {
-		if l < LevelDebug || l > LevelFatal {
+		if l < LevelDebug || l > LevelError {
 			return fmt.Errorf("invalid level: %d", l)
 		}
 
